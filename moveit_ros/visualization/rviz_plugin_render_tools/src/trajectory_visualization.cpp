@@ -97,6 +97,10 @@ TrajectoryVisualization::TrajectoryVisualization(rviz::Property* widget, rviz::D
   state_display_time_property_->addOptionStd("0.1 s");
   state_display_time_property_->addOptionStd("0.5 s");
 
+  use_ros_time_property_ = new rviz::BoolProperty("Use Ros Time", false, "Indicates wether ros-time or wall-time is "
+                                                                         "used for state display timing.",
+                                                  widget, SLOT(changedUseRosTime()), this);
+
   loop_display_property_ = new rviz::BoolProperty("Loop Animation", false, "Indicates whether the last received path "
                                                                            "is to be animated in a loop",
                                                   widget, SLOT(changedLoopDisplay()), this);
@@ -211,6 +215,10 @@ void TrajectoryVisualization::changedLoopDisplay()
   display_path_robot_->setVisible(display_->isEnabled() && displaying_trajectory_message_ && animating_path_);
   if (loop_display_property_->getBool() && trajectory_slider_panel_)
     trajectory_slider_panel_->pauseButton(false);
+}
+
+void TrajectoryVisualization::changedUseRosTime()
+{
 }
 
 void TrajectoryVisualization::changedShowTrail()
@@ -409,7 +417,11 @@ void TrajectoryVisualization::update(float wall_dt, float ros_dt)
   {
     int previous_state = current_state_;
     int waypoint_count = displaying_trajectory_message_->getWayPointCount();
-    current_state_time_ += wall_dt;
+    if (use_ros_time_property_->getBool()) {
+      current_state_time_ += ros_dt;
+    } else {
+      current_state_time_ += wall_dt;
+    }
     float tm = getStateDisplayTime();
 
     if (trajectory_slider_panel_ && trajectory_slider_panel_->isVisible() && trajectory_slider_panel_->isPaused())
