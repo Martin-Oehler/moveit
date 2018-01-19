@@ -413,10 +413,15 @@ void TrajectoryVisualization::update(float wall_dt, float ros_dt)
       if (trajectory_slider_panel_)
         trajectory_slider_panel_->setSliderPosition(0);
     }
-  } else {
-    if (use_ros_time_property_->getBool()) {
+  }
+  else
+  {
+    if (use_ros_time_property_->getBool())
+    {
       current_state_time_ += ros_dt;
-    } else {
+    }
+    else
+    {
       current_state_time_ += wall_dt;
     }
   }
@@ -450,7 +455,7 @@ void TrajectoryVisualization::update(float wall_dt, float ros_dt)
         if (!loop_display_property_->getBool() && trajectory_slider_panel_)
           trajectory_slider_panel_->pauseButton(true);
       }
-      current_state_time_ = current_state_time_ -  tm;
+      current_state_time_ = current_state_time_ - tm;
     }
   }
 }
