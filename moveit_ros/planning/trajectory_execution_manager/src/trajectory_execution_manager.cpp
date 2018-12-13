@@ -1474,42 +1474,63 @@ bool TrajectoryExecutionManager::executePart(std::size_t part_index)
       }
     }
 
+    std::vector<bool> finished_handles(handles.size(), false);
+    unsigned int finished_handles_count = 0;
     bool result = true;
-    for (std::size_t i = 0; i < handles.size(); ++i)
+    ros::Time expected_trajectory_finish_time = ros::Time::now() + expected_trajectory_duration;
+    ros::Duration wait_time(0.100 / static_cast<double>(handles.size())); // Execute the outer loop with 10 Hz
+    // Loop until all handles are finished (or the trajectory times out)
+    while (result && finished_handles_count < handles.size())
     {
-      if (execution_duration_monitoring_)
+      // Check for result states
+      for (std::size_t i = 0; i < handles.size(); ++i)
       {
-        if (!handles[i]->waitForExecution(expected_trajectory_duration))
-          if (!execution_complete_ && ros::Time::now() - current_time > expected_trajectory_duration)
+        if (!finished_handles[i] && handles[i]->waitForExecution(wait_time))
+        {
+          // True: Execution is complete (whether successful or not)
+          finished_handles_count++;
+          finished_handles[i] = true;
+          ROS_DEBUG_STREAM_NAMED(name_, "Handle finished: " << handles[i]->getName()
+                          << " [" << finished_handles_count << "/" << handles.size() << "]");
+          // Check, if execution was successful
+          if (handles[i]->getLastExecutionStatus() != moveit_controller_manager::ExecutionStatus::SUCCEEDED)
           {
-            ROS_ERROR_NAMED(name_, "Controller is taking too long to execute trajectory (the expected upper "
-                                   "bound for the trajectory execution was %lf seconds). Stopping trajectory.",
-                            expected_trajectory_duration.toSec());
-            {
-              boost::mutex::scoped_lock slock(execution_state_mutex_);
-              stopExecutionInternal();  // this is really tricky. we can't call stopExecution() here, so we call the
-                                        // internal function only
-            }
-            last_execution_status_ = moveit_controller_manager::ExecutionStatus::TIMED_OUT;
+            // Not successful, stop trajectory and exit loop
+            ROS_WARN_STREAM_NAMED(name_, "Controller handle " << handles[i]->getName() << " reports status "
+                                                              << handles[i]->getLastExecutionStatus().asString());
+
+            last_execution_status_ = handles[i]->getLastExecutionStatus();
             result = false;
             break;
           }
-      }
-      else
-        handles[i]->waitForExecution();
+        }
 
-      // if something made the trajectory stop, we stop this thread too
-      if (execution_complete_)
-      {
-        result = false;
-        break;
+        // Check trajectory timeout
+        if (execution_duration_monitoring_ && !execution_complete_
+            && ros::Time::now() > expected_trajectory_finish_time)
+        {
+          ROS_ERROR_NAMED(name_, "Controller is taking too long to execute trajectory (the expected upper "
+                                 "bound for the trajectory execution was %lf seconds). Stopping trajectory.",
+                          expected_trajectory_duration.toSec());
+          last_execution_status_ = moveit_controller_manager::ExecutionStatus::TIMED_OUT;
+          result = false;
+          break;
+        }
+
+        // if something made the trajectory stop, we stop this thread too
+        if (execution_complete_)
+        {
+          result = false;
+        }
       }
-      else if (handles[i]->getLastExecutionStatus() != moveit_controller_manager::ExecutionStatus::SUCCEEDED)
+    }
+
+    if (!result) {
+      ROS_WARN_STREAM_NAMED(name_, "Execution was unsuccessful. Stopping the trajectory.");
       {
-        ROS_WARN_STREAM_NAMED(name_, "Controller handle " << handles[i]->getName() << " reports status "
-                                                          << handles[i]->getLastExecutionStatus().asString());
-        last_execution_status_ = handles[i]->getLastExecutionStatus();
-        result = false;
+        boost::mutex::scoped_lock slock(execution_state_mutex_);
+        stopExecutionInternal();  // this is really tricky. we can't call stopExecution() here, so we call the
+                                  // internal function only
       }
     }
 
