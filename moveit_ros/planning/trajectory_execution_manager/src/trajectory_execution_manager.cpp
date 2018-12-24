@@ -1487,7 +1487,7 @@ bool TrajectoryExecutionManager::executePart(std::size_t part_index)
       {
         if (!finished_handles[i] && handles[i]->waitForExecution(wait_time))
         {
-          // True: Execution is complete (whether successful or not)
+          // Execution is complete (whether successful or not)
           finished_handles_count++;
           finished_handles[i] = true;
           ROS_DEBUG_STREAM_NAMED(name_, "Handle finished: " << handles[i]->getName()
