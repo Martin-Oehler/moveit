@@ -42,7 +42,6 @@
 #include <moveit/mesh_filter/gl_renderer.h>
 #include <moveit/mesh_filter/mesh_filter_base.h>
 #include <boost/function.hpp>
-#include <Eigen/Eigen>
 
 // forward declarations
 namespace shapes
@@ -93,9 +92,9 @@ public:
 template <typename SensorType>
 MeshFilter<SensorType>::MeshFilter(const TransformCallback& transform_callback,
                                    const typename SensorType::Parameters& sensor_parameters)
-  : MeshFilterBase(transform_callback, sensor_parameters, SensorType::renderVertexShaderSource,
-                   SensorType::renderFragmentShaderSource, SensorType::filterVertexShaderSource,
-                   SensorType::filterFragmentShaderSource)
+  : MeshFilterBase(transform_callback, sensor_parameters, SensorType::RENDER_VERTEX_SHADER_SOURCE,
+                   SensorType::RENDER_FRAGMENT_SHADER_SOURCE, SensorType::FILTER_VERTEX_SHADER_SOURCE,
+                   SensorType::FILTER_FRAGMENT_SHADER_SOURCE)
 {
 }
 

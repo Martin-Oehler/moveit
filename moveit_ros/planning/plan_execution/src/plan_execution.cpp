@@ -197,8 +197,7 @@ void plan_execution::PlanExecution::planAndExecuteHelper(ExecutableMotionPlan& p
         plan.error_code_.val == moveit_msgs::MoveItErrorCodes::INVALID_MOTION_PLAN ||
         plan.error_code_.val == moveit_msgs::MoveItErrorCodes::UNABLE_TO_AQUIRE_SENSOR_DATA)
     {
-      if (plan.error_code_.val == moveit_msgs::MoveItErrorCodes::UNABLE_TO_AQUIRE_SENSOR_DATA &&
-          opt.replan_delay_ > 0.0)
+      if (plan.error_code_.val == moveit_msgs::MoveItErrorCodes::UNABLE_TO_AQUIRE_SENSOR_DATA && opt.replan_delay_ > 0.0)
       {
         ros::WallDuration d(opt.replan_delay_);
         d.sleep();
@@ -380,7 +379,7 @@ moveit_msgs::MoveItErrorCodes plan_execution::PlanExecution::executeAndMonitor(E
     // convert to message, pass along
     moveit_msgs::RobotTrajectory msg;
     plan.plan_components_[i].trajectory_->getRobotTrajectoryMsg(msg);
-    if (!trajectory_execution_manager_->push(msg))
+    if (!trajectory_execution_manager_->push(msg, plan.plan_components_[i].controller_names_))
     {
       trajectory_execution_manager_->clear();
       ROS_ERROR_STREAM_NAMED("plan_execution", "Apparently trajectory initialization failed");
@@ -391,17 +390,22 @@ moveit_msgs::MoveItErrorCodes plan_execution::PlanExecution::executeAndMonitor(E
   }
 
   if (!trajectory_monitor_ && planning_scene_monitor_->getStateMonitor())
-    trajectory_monitor_.reset(
-        new planning_scene_monitor::TrajectoryMonitor(planning_scene_monitor_->getStateMonitor()));
+  {
+    // Pass current value of reconfigurable parameter plan_execution/record_trajectory_state_frequency
+    double sampling_frequency = 0.0;
+    node_handle_.getParam("plan_execution/record_trajectory_state_frequency", sampling_frequency);
+    trajectory_monitor_ = std::make_shared<planning_scene_monitor::TrajectoryMonitor>(
+        planning_scene_monitor_->getStateMonitor(), sampling_frequency);
+  }
 
   // start recording trajectory states
   if (trajectory_monitor_)
     trajectory_monitor_->startTrajectoryMonitor();
 
   // start a trajectory execution thread
-  trajectory_execution_manager_->execute(
-      boost::bind(&PlanExecution::doneWithTrajectoryExecution, this, _1),
-      boost::bind(&PlanExecution::successfulTrajectorySegmentExecution, this, &plan, _1));
+  trajectory_execution_manager_->execute(boost::bind(&PlanExecution::doneWithTrajectoryExecution, this, _1),
+                                         boost::bind(&PlanExecution::successfulTrajectorySegmentExecution, this, &plan,
+                                                     _1));
   // wait for path to be done, while checking that the path does not become invalid
   ros::Rate r(100);
   path_became_invalid_ = false;
@@ -480,8 +484,7 @@ void plan_execution::PlanExecution::planningSceneUpdatedCallback(
     new_scene_update_ = true;
 }
 
-void plan_execution::PlanExecution::doneWithTrajectoryExecution(
-    const moveit_controller_manager::ExecutionStatus& status)
+void plan_execution::PlanExecution::doneWithTrajectoryExecution(const moveit_controller_manager::ExecutionStatus& status)
 {
   execution_complete_ = true;
 }
@@ -511,7 +514,7 @@ void plan_execution::PlanExecution::successfulTrajectorySegmentExecution(const E
   if (index < plan->plan_components_.size() && plan->plan_components_[index].trajectory_ &&
       !plan->plan_components_[index].trajectory_->empty())
   {
-    if (!isRemainingPathValid(*plan, std::make_pair<int>(index, 0)))
+    if (!isRemainingPathValid(*plan, std::make_pair(static_cast<int>(index), 0)))
       path_became_invalid_ = true;
   }
 }

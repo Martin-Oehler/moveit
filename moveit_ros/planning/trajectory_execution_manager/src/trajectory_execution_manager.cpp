@@ -143,8 +143,9 @@ void TrajectoryExecutionManager::initialize()
       if (classes.size() == 1)
       {
         controller = classes[0];
-        ROS_WARN_NAMED(name_, "Parameter '~moveit_controller_manager' is not specified but only one "
-                              "matching plugin was found: '%s'. Using that one.",
+        ROS_WARN_NAMED(name_,
+                       "Parameter '~moveit_controller_manager' is not specified but only one "
+                       "matching plugin was found: '%s'. Using that one.",
                        controller.c_str());
       }
       else
@@ -160,8 +161,8 @@ void TrajectoryExecutionManager::initialize()
       }
       catch (pluginlib::PluginlibException& ex)
       {
-        ROS_FATAL_STREAM_NAMED(name_, "Exception while loading controller manager '" << controller
-                                                                                     << "': " << ex.what());
+        ROS_FATAL_STREAM_NAMED(name_,
+                               "Exception while loading controller manager '" << controller << "': " << ex.what());
       }
   }
 
@@ -418,9 +419,9 @@ void TrajectoryExecutionManager::continuousExecutionThread()
       while (uit != used_handles.end())
         if ((*uit)->getLastExecutionStatus() != moveit_controller_manager::ExecutionStatus::RUNNING)
         {
-          std::set<moveit_controller_manager::MoveItControllerHandlePtr>::iterator toErase = uit;
+          std::set<moveit_controller_manager::MoveItControllerHandlePtr>::iterator to_erase = uit;
           ++uit;
-          used_handles.erase(toErase);
+          used_handles.erase(to_erase);
         }
         else
           ++uit;
@@ -973,10 +974,11 @@ bool TrajectoryExecutionManager::validate(const TrajectoryExecutionContext& cont
         // normalize positions and compare
         jm->enforcePositionBounds(&cur_position);
         jm->enforcePositionBounds(&traj_position);
-        if (fabs(cur_position - traj_position) > allowed_start_tolerance_)
+        if (jm->distance(&cur_position, &traj_position) > allowed_start_tolerance_)
         {
-          ROS_ERROR_NAMED(name_, "\nInvalid Trajectory: start point deviates from current robot state more than %g"
-                                 "\njoint '%s': expected: %g, current: %g",
+          ROS_ERROR_NAMED(name_,
+                          "\nInvalid Trajectory: start point deviates from current robot state more than %g"
+                          "\njoint '%s': expected: %g, current: %g",
                           allowed_start_tolerance_, joint_names[i].c_str(), traj_position, cur_position);
           return false;
         }
@@ -1037,15 +1039,15 @@ bool TrajectoryExecutionManager::configure(TrajectoryExecutionContext& context,
   }
   std::set<std::string> actuated_joints;
 
-  auto isActuated = [this](const std::string& joint_name) -> bool {
+  auto is_actuated = [this](const std::string& joint_name) -> bool {
     const robot_model::JointModel* jm = robot_model_->getJointModel(joint_name);
     return (jm && !jm->isPassive() && !jm->getMimic() && jm->getType() != robot_model::JointModel::FIXED);
   };
   for (const std::string& joint_name : trajectory.multi_dof_joint_trajectory.joint_names)
-    if (isActuated(joint_name))
+    if (is_actuated(joint_name))
       actuated_joints.insert(joint_name);
   for (const std::string& joint_name : trajectory.joint_trajectory.joint_names)
-    if (isActuated(joint_name))
+    if (is_actuated(joint_name))
       actuated_joints.insert(joint_name);
 
   if (actuated_joints.empty())
@@ -1172,8 +1174,12 @@ void TrajectoryExecutionManager::stopExecution(bool auto_clear)
       ROS_INFO_NAMED(name_, "Stopped trajectory execution.");
 
       // wait for the execution thread to finish
-      execution_thread_->join();
-      execution_thread_.reset();
+      boost::mutex::scoped_lock lock(execution_thread_mutex_);
+      if (execution_thread_)
+      {
+        execution_thread_->join();
+        execution_thread_.reset();
+      }
 
       if (auto_clear)
         clear();
@@ -1184,8 +1190,12 @@ void TrajectoryExecutionManager::stopExecution(bool auto_clear)
   else if (execution_thread_)  // just in case we have some thread waiting to be joined from some point in the past, we
                                // join it now
   {
-    execution_thread_->join();
-    execution_thread_.reset();
+    boost::mutex::scoped_lock lock(execution_thread_mutex_);
+    if (execution_thread_)
+    {
+      execution_thread_->join();
+      execution_thread_.reset();
+    }
   }
 }
 
@@ -1471,8 +1481,9 @@ bool TrajectoryExecutionManager::executePart(std::size_t part_index)
         if (!handles[i]->waitForExecution(expected_trajectory_duration))
           if (!execution_complete_ && ros::Time::now() - current_time > expected_trajectory_duration)
           {
-            ROS_ERROR_NAMED(name_, "Controller is taking too long to execute trajectory (the expected upper "
-                                   "bound for the trajectory execution was %lf seconds). Stopping trajectory.",
+            ROS_ERROR_NAMED(name_,
+                            "Controller is taking too long to execute trajectory (the expected upper "
+                            "bound for the trajectory execution was %lf seconds). Stopping trajectory.",
                             expected_trajectory_duration.toSec());
             {
               boost::mutex::scoped_lock slock(execution_state_mutex_);

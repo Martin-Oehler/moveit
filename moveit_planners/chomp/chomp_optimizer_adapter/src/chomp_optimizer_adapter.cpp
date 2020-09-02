@@ -107,8 +107,7 @@ public:
     if (!nh_.getParam("smoothness_cost_jerk", params_.smoothness_cost_jerk_))
     {
       params_.smoothness_cost_jerk_ = 0.0;
-      ROS_INFO_STREAM(
-          "Param smoothness_cost_jerk_ was not set. Using default value: " << params_.smoothness_cost_jerk_);
+      ROS_INFO_STREAM("Param smoothness_cost_jerk_ was not set. Using default value: " << params_.smoothness_cost_jerk_);
     }
     if (!nh_.getParam("ridge_factor", params_.ridge_factor_))
     {
@@ -178,7 +177,7 @@ public:
     ROS_INFO_STREAM("Configuring Planning Scene for CHOMP ....");
     planning_scene->setActiveCollisionDetector(hybrid_cd, true);
 
-    chomp::ChompPlanner chompPlanner;
+    chomp::ChompPlanner chomp_planner;
     planning_interface::MotionPlanDetailedResponse res_detailed;
     moveit_msgs::MotionPlanDetailedResponse res_detailed_moveit_msgs;
 
@@ -190,7 +189,7 @@ public:
     res_detailed_moveit_msgs.trajectory.resize(1);
     res_detailed_moveit_msgs.trajectory[0] = trajectory_msgs_from_response;
 
-    bool planning_success = chompPlanner.solve(planning_scene, req, params_, res_detailed_moveit_msgs);
+    bool planning_success = chomp_planner.solve(planning_scene, req, params_, res_detailed_moveit_msgs);
 
     if (planning_success)
     {

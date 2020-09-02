@@ -241,7 +241,7 @@ void PlanningSceneMonitor::initialize(const planning_scene::PlanningScenePtr& sc
 
   last_update_time_ = last_robot_motion_time_ = ros::Time::now();
   last_robot_state_update_wall_time_ = ros::WallTime::now();
-  dt_state_update_ = ros::WallDuration(0.1);
+  dt_state_update_ = ros::WallDuration(0.03);
 
   double temp_wait_time = 0.05;
 
@@ -371,6 +371,11 @@ void PlanningSceneMonitor::scenePublishingThread()
             if (octomap_monitor_)
               lock = octomap_monitor_->getOcTreePtr()->reading();
             scene_->getPlanningSceneDiffMsg(msg);
+            if (new_scene_update_ == UPDATE_STATE)
+            {
+              msg.robot_state.attached_collision_objects.clear();
+              msg.robot_state.is_diff = true;
+            }
           }
           boost::recursive_mutex::scoped_lock prevent_shape_cache_updates(shape_handles_lock_);  // we don't want the
                                                                                                  // transform cache to
@@ -406,7 +411,6 @@ void PlanningSceneMonitor::scenePublishingThread()
     }
     if (publish_msg)
     {
-      rate.reset();
       planning_scene_publisher_.publish(msg);
       if (is_full)
         ROS_DEBUG_NAMED(LOGNAME, "Published full planning scene: '%s'", msg.name.c_str());
@@ -468,6 +472,11 @@ void PlanningSceneMonitor::triggerSceneUpdateEvent(SceneUpdateType update_type)
 
 bool PlanningSceneMonitor::requestPlanningSceneState(const std::string& service_name)
 {
+  if (get_scene_service_.getService() == service_name)
+  {
+    ROS_FATAL_STREAM_NAMED(LOGNAME, "requestPlanningSceneState() to self-provided service '" << service_name << "'");
+    throw std::runtime_error("requestPlanningSceneState() to self-provided service: " + service_name);
+  }
   // use global namespace for service
   ros::ServiceClient client = ros::NodeHandle().serviceClient<moveit_msgs::GetPlanningScene>(service_name);
   moveit_msgs::GetPlanningScene srv;
@@ -491,10 +500,33 @@ bool PlanningSceneMonitor::requestPlanningSceneState(const std::string& service_
   }
   else
   {
-    ROS_INFO_NAMED(LOGNAME, "Failed to call service %s, have you launched move_group? at %s:%d", service_name.c_str(),
-                   __FILE__, __LINE__);
+    ROS_INFO_NAMED(
+        LOGNAME, "Failed to call service %s, have you launched move_group or called psm.providePlanningSceneService()?",
+        service_name.c_str());
     return false;
   }
+  return true;
+}
+
+void PlanningSceneMonitor::providePlanningSceneService(const std::string& service_name)
+{
+  // Load the service
+  get_scene_service_ =
+      root_nh_.advertiseService(service_name, &PlanningSceneMonitor::getPlanningSceneServiceCallback, this);
+}
+
+bool PlanningSceneMonitor::getPlanningSceneServiceCallback(moveit_msgs::GetPlanningScene::Request& req,
+                                                           moveit_msgs::GetPlanningScene::Response& res)
+{
+  if (req.components.components & moveit_msgs::PlanningSceneComponents::TRANSFORMS)
+    updateFrameTransforms();
+
+  moveit_msgs::PlanningSceneComponents all_components;
+  all_components.components = UINT_MAX;  // Return all scene components if nothing is specified.
+
+  boost::unique_lock<boost::shared_mutex> ulock(scene_update_mutex_);
+  scene_->getPlanningSceneMsg(res.scene, req.components.components ? req.components : all_components);
+
   return true;
 }
 
@@ -505,9 +537,16 @@ void PlanningSceneMonitor::newPlanningSceneCallback(const moveit_msgs::PlanningS
 
 void PlanningSceneMonitor::clearOctomap()
 {
-  octomap_monitor_->getOcTreePtr()->lockWrite();
-  octomap_monitor_->getOcTreePtr()->clear();
-  octomap_monitor_->getOcTreePtr()->unlockWrite();
+  if (octomap_monitor_)
+  {
+    octomap_monitor_->getOcTreePtr()->lockWrite();
+    octomap_monitor_->getOcTreePtr()->clear();
+    octomap_monitor_->getOcTreePtr()->unlockWrite();
+  }
+  else
+  {
+    ROS_WARN_NAMED(LOGNAME, "Unable to clear octomap since no octomap monitor has been initialized");
+  }
 }
 
 bool PlanningSceneMonitor::newPlanningSceneMessage(const moveit_msgs::PlanningScene& scene)
@@ -973,8 +1012,7 @@ bool PlanningSceneMonitor::getShapeTransformCache(const std::string& target_fram
 
     for (LinkShapeHandles::const_iterator it = link_shape_handles_.begin(); it != link_shape_handles_.end(); ++it)
     {
-      tf_buffer_->canTransform(target_frame, it->first->getName(), target_time,
-                               shape_transform_cache_lookup_wait_time_);
+      tf_buffer_->canTransform(target_frame, it->first->getName(), target_time, shape_transform_cache_lookup_wait_time_);
       Eigen::Isometry3d ttr =
           tf2::transformToEigen(tf_buffer_->lookupTransform(target_frame, it->first->getName(), target_time));
       for (std::size_t j = 0; j < it->second.size(); ++j)
@@ -1371,7 +1409,7 @@ void PlanningSceneMonitor::configureDefaultPadding()
   }
 
   // Ensure no leading slash creates a bad param server address
-  static const std::string robot_description =
+  const std::string robot_description =
       (robot_description_[0] == '/') ? robot_description_.substr(1) : robot_description_;
 
   nh_.param(robot_description + "_planning/default_robot_padding", default_robot_padd_, 0.0);

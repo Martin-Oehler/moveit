@@ -566,7 +566,7 @@ bool ConfigurationFilesWidget::loadGenFiles()
 bool ConfigurationFilesWidget::checkDependencies()
 {
   QStringList dependencies;
-  bool requiredActions = false;
+  bool required_actions = false;
 
   // Check that at least 1 planning group exists
   if (config_data_->srdf_->groups_.empty())
@@ -597,18 +597,18 @@ bool ConfigurationFilesWidget::checkDependencies()
   {
     // There is no name or it consists of whitespaces only
     dependencies << "<b>No author name added</b>";
-    requiredActions = true;
+    required_actions = true;
   }
 
   // Check that email information is filled
-  QRegExp mailRegex("\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}\\b");
-  mailRegex.setCaseSensitivity(Qt::CaseInsensitive);
-  mailRegex.setPatternSyntax(QRegExp::RegExp);
-  QString testEmail = QString::fromStdString(config_data_->author_email_);
-  if (!mailRegex.exactMatch(testEmail))
+  QRegExp mail_regex("\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}\\b");
+  mail_regex.setCaseSensitivity(Qt::CaseInsensitive);
+  mail_regex.setPatternSyntax(QRegExp::RegExp);
+  QString test_email = QString::fromStdString(config_data_->author_email_);
+  if (!mail_regex.exactMatch(test_email))
   {
     dependencies << "<b>No valid email address added</b>";
-    requiredActions = true;
+    required_actions = true;
   }
 
   // Display all accumumlated errors:
@@ -616,7 +616,7 @@ bool ConfigurationFilesWidget::checkDependencies()
   {
     // Create a dependency message
     QString dep_message;
-    if (!requiredActions)
+    if (!required_actions)
     {
       dep_message = "Some setup steps have not been completed. None of the steps are required, but here is a reminder "
                     "of what was not filled in, just in case something was forgotten:<br /><ul>";
@@ -632,7 +632,7 @@ bool ConfigurationFilesWidget::checkDependencies()
       dep_message.append("<li>").append(dependencies.at(i)).append("</li>");
     }
 
-    if (!requiredActions)
+    if (!required_actions)
     {
       dep_message.append("</ul><br/>Press Ok to continue generating files.");
       if (QMessageBox::question(this, "Incomplete MoveIt! Setup Assistant Steps", dep_message,
@@ -688,8 +688,9 @@ void ConfigurationFilesWidget::changeCheckedState(QListWidgetItem* item)
 
   if (!generate && (gen_files_[index].write_on_changes & config_data_->changes))
   {
-    QMessageBox::warning(this, "Package Generation", "You should generate this file to ensure your changes will take "
-                                                     "effect.");
+    QMessageBox::warning(this, "Package Generation",
+                         "You should generate this file to ensure your changes will take "
+                         "effect.");
   }
 
   // Enable/disable file
@@ -884,8 +885,9 @@ bool ConfigurationFilesWidget::generatePackage()
   // Check that a valid stack package name has been given
   if (new_package_path.empty())
   {
-    QMessageBox::warning(this, "Error Generating", "No package path provided. Please choose a directory location to "
-                                                   "generate the MoveIt! configuration files.");
+    QMessageBox::warning(this, "Error Generating",
+                         "No package path provided. Please choose a directory location to "
+                         "generate the MoveIt! configuration files.");
     return false;
   }
 
@@ -921,12 +923,12 @@ bool ConfigurationFilesWidget::generatePackage()
     }
 
     // Confirm overwrite
-    if (QMessageBox::question(
-            this, "Confirm Package Update",
-            QString("Are you sure you want to overwrite this existing package with updated configurations?<br /><i>")
-                .append(new_package_path.c_str())
-                .append("</i>"),
-            QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel)
+    if (QMessageBox::question(this, "Confirm Package Update",
+                              QString("Are you sure you want to overwrite this existing package with updated "
+                                      "configurations?<br /><i>")
+                                  .append(new_package_path.c_str())
+                                  .append("</i>"),
+                              QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel)
     {
       return false;  // abort
     }
@@ -963,14 +965,18 @@ bool ConfigurationFilesWidget::generatePackage()
     absolute_path = config_data_->appendPaths(new_package_path, file->rel_path_);
     ROS_DEBUG_STREAM("Creating file " << absolute_path);
 
+    // Clear template strings in case export is run multiple times with changes in between
+    template_strings_.clear();
+
     // Run the generate function
     if (!file->gen_func_(absolute_path))
     {
       // Error occured
-      QMessageBox::critical(this, "Error Generating File", QString("Failed to generate folder or file: '")
-                                                               .append(file->rel_path_.c_str())
-                                                               .append("' at location:\n")
-                                                               .append(absolute_path.c_str()));
+      QMessageBox::critical(this, "Error Generating File",
+                            QString("Failed to generate folder or file: '")
+                                .append(file->rel_path_.c_str())
+                                .append("' at location:\n")
+                                .append(absolute_path.c_str()));
       return false;
     }
     updateProgress();  // Increment and update GUI
@@ -984,10 +990,9 @@ bool ConfigurationFilesWidget::generatePackage()
 // ******************************************************************************************
 void ConfigurationFilesWidget::exitSetupAssistant()
 {
-  if (has_generated_pkg_ ||
-      QMessageBox::question(this, "Exit Setup Assistant",
-                            QString("Are you sure you want to exit the MoveIt! Setup Assistant?"),
-                            QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok)
+  if (has_generated_pkg_ || QMessageBox::question(this, "Exit Setup Assistant",
+                                                  QString("Are you sure you want to exit the MoveIt! Setup Assistant?"),
+                                                  QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok)
   {
     QApplication::quit();
   }
@@ -1098,7 +1103,6 @@ void ConfigurationFilesWidget::loadTemplateStrings()
   else
   {
     std::stringstream deps;
-    deps << "<build_depend>" << config_data_->urdf_pkg_name_ << "</build_depend>\n";
     deps << "  <run_depend>" << config_data_->urdf_pkg_name_ << "</run_depend>\n";
     addTemplateString("[OTHER_DEPENDENCIES]", deps.str());  // not relative to a ROS package
   }
@@ -1120,6 +1124,24 @@ void ConfigurationFilesWidget::loadTemplateStrings()
     }
     addTemplateString("[ROS_CONTROLLERS]", controllers.str());
   }
+
+  // Pair 10 - Add parameter files for the kinematics solvers that should be loaded
+  // in addition to kinematics.yaml by planning_context.launch
+  std::string kinematics_parameters_files_block;
+  for (const auto& groups : config_data_->group_meta_data_)
+  {
+    if (groups.second.kinematics_parameters_file_.empty())
+      continue;
+
+    // add a linebreak if we have more than one entry
+    if (!kinematics_parameters_files_block.empty())
+      kinematics_parameters_files_block += "\n";
+
+    std::string line = "    <rosparam command=\"load\" ns=\"" + groups.first + "\" file=\"" +
+                       groups.second.kinematics_parameters_file_ + "\"/>";
+    kinematics_parameters_files_block += line;
+  }
+  addTemplateString("[KINEMATICS_PARAMETERS_FILE_NAMES_BLOCK]", kinematics_parameters_files_block);
 
   addTemplateString("[AUTHOR_NAME]", config_data_->author_name_);
   addTemplateString("[AUTHOR_EMAIL]", config_data_->author_email_);

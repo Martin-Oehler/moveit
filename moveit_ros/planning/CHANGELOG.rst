@@ -2,6 +2,50 @@
 Changelog for package moveit_ros_planning
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.6 (2020-08-19)
+------------------
+* [fix]   Fix segfault in PSM::clearOctomap() (`#2193 <https://github.com/ros-planning/moveit/issues/2193>`_)
+* [maint] Migrate to clang-format-10
+* [maint] Optimize includes (`#2229 <https://github.com/ros-planning/moveit/issues/2229>`_)
+* Contributors: Henning Kayser, Markus Vieth, Robert Haschke
+
+1.0.5 (2020-07-08)
+------------------
+* [feature] Trajectory Execution: fix check for start state position (`#2157 <https://github.com/ros-planning/moveit/issues/2157>`_)
+* [feature] Improve responsiveness of PlanningSceneDisplay (`#2049 <https://github.com/ros-planning/moveit/issues/2049>`_)
+  - PlanningSceneMonitor: increate update frequency from 10Hz to 30Hz
+  - send RobotState diff if only position changed
+* Contributors: Michael Görner, Robert Haschke, Simon Schmeisser
+
+1.0.4 (2020-05-30)
+------------------
+
+1.0.3 (2020-04-26)
+------------------
+* [fix]     `CurrentStateMonitor`: Initialize velocity/effort with unset dynamics
+* [fix]     Fix spurious warning message (# IK attempts) (`#1876 <https://github.com/ros-planning/moveit/issues/1876>`_)
+* [maint]   Move `get_planning_scene` service into `PlanningSceneMonitor` for reusability (`#1854 <https://github.com/ros-planning/moveit/issues/1854>`_)
+* [feature] Forward controller names to TrajectoryExecutionManager
+* [fix]     Always copy dynamics if enabled in CurrentStateMonitor (`#1676 <https://github.com/ros-planning/moveit/issues/1676>`_)
+* [feature] TrajectoryMonitor: zero sampling frequency disables trajectory recording (`#1542 <https://github.com/ros-planning/moveit/issues/1542>`_)
+* [feature] Add user warning when planning fails with multiple constraints (`#1443 <https://github.com/ros-planning/moveit/issues/1443>`_)
+* [maint]   Apply clang-tidy fix to entire code base (`#1394 <https://github.com/ros-planning/moveit/issues/1394>`_)
+* [maint]   Fix errors: catkin_lint 1.6.7 (`#1987 <https://github.com/ros-planning/moveit/issues/1987>`_)
+* [maint]   Windows build fixes
+  * Fix header inclusion and other MSVC build errors (`#1636 <https://github.com/ros-planning/moveit/issues/1636>`_)
+  * Fix binary artifact install locations. (`#1575 <https://github.com/ros-planning/moveit/issues/1575>`_)
+  * Favor ros::Duration.sleep over sleep. (`#1634 <https://github.com/ros-planning/moveit/issues/1634>`_)
+  * Remove GCC extensions (`#1583 <https://github.com/ros-planning/moveit/issues/1583>`_)
+  * Fix binary artifact install locations. (`#1575 <https://github.com/ros-planning/moveit/issues/1575>`_)
+* [maint]   Use CMAKE_CXX_STANDARD to enforce c++14 (`#1607 <https://github.com/ros-planning/moveit/issues/1607>`_)
+* [fix]     Fix potential memory leak in `RDFLoader` (`#1828 <https://github.com/ros-planning/moveit/issues/1828>`_)
+  [maint]   Use smart pointers to avoid explicit new/delete
+* [fix]     `TrajectoryExecutionManager`: fix race condition (`#1709 <https://github.com/ros-planning/moveit/issues/1709>`_)
+* [fix]     Correctly propagate error if time parameterization fails (`#1562 <https://github.com/ros-planning/moveit/issues/1562>`_)
+* [maint]   move `occupancy_map_monitor` into its own package (`#1533 <https://github.com/ros-planning/moveit/issues/1533>`_)
+* [feature] `PlanExecution`: return executed trajectory (`#1538 <https://github.com/ros-planning/moveit/issues/1538>`_)
+* Contributors: Felix von Drigalski, Henning Kayser, Max Krichenbauer, Michael Görner, Robert Haschke, Sean Yen, Yu, Yan, jschleicher, livanov93, Luca Lach
+
 1.0.2 (2019-06-28)
 ------------------
 * [fix] Removed MessageFilter for /collision_object messages (`#1406 <https://github.com/ros-planning/moveit/issues/1406>`_)
@@ -96,7 +140,7 @@ Changelog for package moveit_ros_planning
 0.9.9 (2017-08-06)
 ------------------
 * [fix] Change getCurrentExpectedTrajectory index so collision detection is still performed even if the path timing is not known (`#550 <https://github.com/ros-planning/moveit/issues/550>`_)
-* [fix] Support for MultiDoF only trajectories `#553 <https://github.com/ros-planning/moveit/pull/553>`_ 
+* [fix] Support for MultiDoF only trajectories `#553 <https://github.com/ros-planning/moveit/pull/553>`_
 * [fix] ros_error macro name (`#544 <https://github.com/ros-planning/moveit/issues/544>`_)
 * [fix] check plan size for plan length=0 `#535 <https://github.com/ros-planning/moveit/issues/535>`_
 * Contributors: Cyrille Morin, Michael Görner, Mikael Arguedas, Notou, Unknown

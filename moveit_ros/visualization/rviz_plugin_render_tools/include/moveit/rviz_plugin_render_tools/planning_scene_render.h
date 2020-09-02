@@ -76,6 +76,8 @@ public:
     return scene_robot_;
   }
 
+  void updateRobotPosition(const planning_scene::PlanningSceneConstPtr& scene);
+
   void renderPlanningScene(const planning_scene::PlanningSceneConstPtr& scene, const rviz::Color& default_scene_color,
                            const rviz::Color& default_attached_color, OctreeVoxelRenderMode voxel_render_mode,
                            OctreeVoxelColorMode voxel_color_mode, float default_scene_alpha);
@@ -87,6 +89,6 @@ private:
   RenderShapesPtr render_shapes_;
   RobotStateVisualizationPtr scene_robot_;
 };
-}
+}  // namespace moveit_rviz_plugin
 
 #endif

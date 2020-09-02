@@ -2,6 +2,29 @@
 Changelog for package chomp_motion_planner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.6 (2020-08-19)
+------------------
+* [maint] Migrate to clang-format-10
+* [maint] Optimize includes (`#2229 <https://github.com/ros-planning/moveit/issues/2229>`_)
+* Contributors: Markus Vieth, Robert Haschke
+
+1.0.5 (2020-07-08)
+------------------
+
+1.0.4 (2020-05-30)
+------------------
+
+1.0.3 (2020-04-26)
+------------------
+* [maint] Apply clang-tidy fix to entire code base (`#1394 <https://github.com/ros-planning/moveit/issues/1394>`_)
+* [maint] Windows build fixes
+  * Fix header inclusion and other MSVC build errors (`#1636 <https://github.com/ros-planning/moveit/issues/1636>`_)
+  * Remove GCC extensions (`#1583 <https://github.com/ros-planning/moveit/issues/1583>`_)
+  * Fix binary artifact install locations. (`#1575 <https://github.com/ros-planning/moveit/issues/1575>`_)
+* [maint] Use CMAKE_CXX_STANDARD to enforce c++14 (`#1607 <https://github.com/ros-planning/moveit/issues/1607>`_)
+* [fix]   Fix possible division-by-zero (`#1809 <https://github.com/ros-planning/moveit/issues/1809>`_)
+* Contributors: Max Krichenbauer, Robert Haschke, Sean Yen, Yu, Yan
+
 1.0.2 (2019-06-28)
 ------------------
 * [fix] Fix chomp planner (`#1512 <https://github.com/ros-planning/moveit/issues/1512>`_)

@@ -37,6 +37,7 @@
 #include <moveit/rviz_plugin_render_tools/robot_state_visualization.h>
 #include <moveit/rviz_plugin_render_tools/planning_link_updater.h>
 #include <moveit/rviz_plugin_render_tools/render_shapes.h>
+#include <rviz/robot/robot_link.h>
 #include <QApplication>
 
 namespace moveit_rviz_plugin
@@ -66,7 +67,6 @@ void RobotStateVisualization::load(const urdf::ModelInterface& descr, bool visua
   robot_.setVisualVisible(visual_visible_);
   robot_.setCollisionVisible(collision_visible_);
   robot_.setVisible(visible_);
-  QApplication::processEvents();
 }
 
 void RobotStateVisualization::clear()
@@ -78,6 +78,12 @@ void RobotStateVisualization::clear()
 void RobotStateVisualization::setDefaultAttachedObjectColor(const std_msgs::ColorRGBA& default_attached_object_color)
 {
   default_attached_object_color_ = default_attached_object_color;
+}
+
+void RobotStateVisualization::updateAttachedObjectColors(const std_msgs::ColorRGBA& attached_object_color)
+{
+  render_shapes_->updateShapeColors(attached_object_color.r, attached_object_color.g, attached_object_color.b,
+                                    robot_.getAlpha());
 }
 
 void RobotStateVisualization::update(const robot_state::RobotStateConstPtr& kinematic_state)
@@ -107,13 +113,13 @@ void RobotStateVisualization::updateHelper(const robot_state::RobotStateConstPtr
 
   std::vector<const robot_state::AttachedBody*> attached_bodies;
   kinematic_state->getAttachedBodies(attached_bodies);
-  for (std::size_t i = 0; i < attached_bodies.size(); ++i)
+  for (const robot_state::AttachedBody* attached_body : attached_bodies)
   {
     std_msgs::ColorRGBA color = default_attached_object_color;
     float alpha = robot_.getAlpha();
     if (color_map)
     {
-      std::map<std::string, std_msgs::ColorRGBA>::const_iterator it = color_map->find(attached_bodies[i]->getName());
+      std::map<std::string, std_msgs::ColorRGBA>::const_iterator it = color_map->find(attached_body->getName());
       if (it != color_map->end())
       {  // render attached bodies with a color that is a bit different
         color.r = std::max(1.0f, it->second.r * 1.05f);
@@ -122,20 +128,31 @@ void RobotStateVisualization::updateHelper(const robot_state::RobotStateConstPtr
         alpha = color.a = it->second.a;
       }
     }
+    rviz::RobotLink* link = robot_.getLink(attached_body->getAttachedLinkName());
+    if (!link)
+    {
+      ROS_ERROR_STREAM("Link " << attached_body->getAttachedLinkName() << " not found in rviz::Robot");
+      continue;
+    }
     rviz::Color rcolor(color.r, color.g, color.b);
-    const EigenSTL::vector_Isometry3d& ab_t = attached_bodies[i]->getGlobalCollisionBodyTransforms();
-    const std::vector<shapes::ShapeConstPtr>& ab_shapes = attached_bodies[i]->getShapes();
+    const EigenSTL::vector_Isometry3d& ab_t = attached_body->getFixedTransforms();
+    const std::vector<shapes::ShapeConstPtr>& ab_shapes = attached_body->getShapes();
     for (std::size_t j = 0; j < ab_shapes.size(); ++j)
     {
-      render_shapes_->renderShape(robot_.getVisualNode(), ab_shapes[j].get(), ab_t[j], octree_voxel_render_mode_,
+      render_shapes_->renderShape(link->getVisualNode(), ab_shapes[j].get(), ab_t[j], octree_voxel_render_mode_,
                                   octree_voxel_color_mode_, rcolor, alpha);
-      render_shapes_->renderShape(robot_.getCollisionNode(), ab_shapes[j].get(), ab_t[j], octree_voxel_render_mode_,
+      render_shapes_->renderShape(link->getCollisionNode(), ab_shapes[j].get(), ab_t[j], octree_voxel_render_mode_,
                                   octree_voxel_color_mode_, rcolor, alpha);
     }
   }
   robot_.setVisualVisible(visual_visible_);
   robot_.setCollisionVisible(collision_visible_);
   robot_.setVisible(visible_);
+}
+
+void RobotStateVisualization::updateKinematicState(const moveit::core::RobotStateConstPtr& kinematic_state)
+{
+  robot_.update(PlanningLinkUpdater(kinematic_state));
 }
 
 void RobotStateVisualization::setVisible(bool visible)

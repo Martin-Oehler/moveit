@@ -39,13 +39,10 @@
 #include <limits>
 #include <Eigen/Geometry>
 #include <algorithm>
-#include <angles/angles.h>
 #include <cmath>
 #include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
 #include <ros/console.h>
 #include <vector>
-
-#include <iostream>
 
 namespace trajectory_processing
 {
@@ -59,29 +56,29 @@ public:
   {
   }
 
-  Eigen::VectorXd getConfig(double s) const
+  Eigen::VectorXd getConfig(double s) const override
   {
     s /= length_;
     s = std::max(0.0, std::min(1.0, s));
     return (1.0 - s) * start_ + s * end_;
   }
 
-  Eigen::VectorXd getTangent(double /* s */) const
+  Eigen::VectorXd getTangent(double /* s */) const override
   {
     return (end_ - start_) / length_;
   }
 
-  Eigen::VectorXd getCurvature(double /* s */) const
+  Eigen::VectorXd getCurvature(double /* s */) const override
   {
     return Eigen::VectorXd::Zero(start_.size());
   }
 
-  std::list<double> getSwitchingPoints() const
+  std::list<double> getSwitchingPoints() const override
   {
     return std::list<double>();
   }
 
-  LinearPathSegment* clone() const
+  LinearPathSegment* clone() const override
   {
     return new LinearPathSegment(*this);
   }
@@ -110,7 +107,6 @@ public:
     const Eigen::VectorXd start_direction = (intersection - start).normalized();
     const Eigen::VectorXd end_direction = (end - intersection).normalized();
 
-    // check if directions are divergent
     if ((start_direction - end_direction).norm() < 0.000001)
     {
       length_ = 0.0;
@@ -122,7 +118,7 @@ public:
     }
 
     // directions must be different at this point so angle is always non-zero
-    const double angle = acos(start_direction.dot(end_direction));
+    const double angle = acos(std::max(-1.0, start_direction.dot(end_direction)));
     const double start_distance = (start - intersection).norm();
     const double end_distance = (end - intersection).norm();
 
@@ -138,25 +134,25 @@ public:
     y = start_direction;
   }
 
-  Eigen::VectorXd getConfig(double s) const
+  Eigen::VectorXd getConfig(double s) const override
   {
     const double angle = s / radius;
     return center + radius * (x * cos(angle) + y * sin(angle));
   }
 
-  Eigen::VectorXd getTangent(double s) const
+  Eigen::VectorXd getTangent(double s) const override
   {
     const double angle = s / radius;
     return -x * sin(angle) + y * cos(angle);
   }
 
-  Eigen::VectorXd getCurvature(double s) const
+  Eigen::VectorXd getCurvature(double s) const override
   {
     const double angle = s / radius;
     return -1.0 / radius * (x * cos(angle) + y * sin(angle));
   }
 
-  std::list<double> getSwitchingPoints() const
+  std::list<double> getSwitchingPoints() const override
   {
     std::list<double> switching_points;
     const double dim = x.size();
@@ -177,7 +173,7 @@ public:
     return switching_points;
   }
 
-  CircularPathSegment* clone() const
+  CircularPathSegment* clone() const override
   {
     return new CircularPathSegment(*this);
   }
@@ -363,7 +359,7 @@ Trajectory::Trajectory(const Path& path, const Eigen::VectorXd& max_velocity, co
   }
 }
 
-Trajectory::~Trajectory(void)
+Trajectory::~Trajectory()
 {
 }
 
@@ -441,9 +437,8 @@ bool Trajectory::getNextAccelerationSwitchingPoint(double path_pos, TrajectorySt
       if ((before_path_vel > after_path_vel ||
            getMinMaxPhaseSlope(switching_path_pos - EPS, switching_path_vel, false) >
                getAccelerationMaxPathVelocityDeriv(switching_path_pos - 2.0 * EPS)) &&
-          (before_path_vel < after_path_vel ||
-           getMinMaxPhaseSlope(switching_path_pos + EPS, switching_path_vel, true) <
-               getAccelerationMaxPathVelocityDeriv(switching_path_pos + 2.0 * EPS)))
+          (before_path_vel < after_path_vel || getMinMaxPhaseSlope(switching_path_pos + EPS, switching_path_vel, true) <
+                                                   getAccelerationMaxPathVelocityDeriv(switching_path_pos + 2.0 * EPS)))
       {
         break;
       }
@@ -483,9 +478,8 @@ bool Trajectory::getNextVelocitySwitchingPoint(double path_pos, TrajectoryStep& 
     {
       start = true;
     }
-  } while ((!start ||
-            getMinMaxPhaseSlope(path_pos, getVelocityMaxPathVelocity(path_pos), false) >
-                getVelocityMaxPathVelocityDeriv(path_pos)) &&
+  } while ((!start || getMinMaxPhaseSlope(path_pos, getVelocityMaxPathVelocity(path_pos), false) >
+                          getVelocityMaxPathVelocityDeriv(path_pos)) &&
            path_pos < path_.getLength());
 
   if (path_pos >= path_.getLength())
@@ -540,6 +534,12 @@ bool Trajectory::integrateForward(std::list<TrajectoryStep>& trajectory, double 
 
     if (next_discontinuity != switching_points.end() && path_pos > next_discontinuity->first)
     {
+      // Avoid having a TrajectoryStep with path_pos near a switching point which will cause an almost identical
+      // TrajectoryStep get added in the next run (https://github.com/ros-planning/moveit/issues/1665)
+      if (path_pos - next_discontinuity->first < EPS)
+      {
+        continue;
+      }
       path_vel = old_path_vel +
                  (next_discontinuity->first - old_path_pos) * (path_vel - old_path_vel) / (path_pos - old_path_pos);
       path_pos = next_discontinuity->first;
@@ -719,12 +719,12 @@ double Trajectory::getAccelerationMaxPathVelocity(double path_pos) const
       {
         if (config_deriv[j] != 0.0)
         {
-          double A_ij = config_deriv2[i] / config_deriv[i] - config_deriv2[j] / config_deriv[j];
-          if (A_ij != 0.0)
+          double a_ij = config_deriv2[i] / config_deriv[i] - config_deriv2[j] / config_deriv[j];
+          if (a_ij != 0.0)
           {
             max_path_velocity = std::min(max_path_velocity, sqrt((max_acceleration_[i] / std::abs(config_deriv[i]) +
                                                                   max_acceleration_[j] / std::abs(config_deriv[j])) /
-                                                                 std::abs(A_ij)));
+                                                                 std::abs(a_ij)));
           }
         }
       }
@@ -861,8 +861,9 @@ Eigen::VectorXd Trajectory::getAcceleration(double time) const
   return path_acc;
 }
 
-TimeOptimalTrajectoryGeneration::TimeOptimalTrajectoryGeneration(const double path_tolerance, const double resample_dt)
-  : path_tolerance_(path_tolerance), resample_dt_(resample_dt)
+TimeOptimalTrajectoryGeneration::TimeOptimalTrajectoryGeneration(const double path_tolerance, const double resample_dt,
+                                                                 const double min_angle_change)
+  : path_tolerance_(path_tolerance), resample_dt_(resample_dt), min_angle_change_(min_angle_change)
 {
 }
 
@@ -963,7 +964,7 @@ bool TimeOptimalTrajectoryGeneration::computeTimeStamps(robot_trajectory::RobotT
     for (size_t j = 0; j < num_joints; j++)
     {
       new_point[j] = waypoint->getVariablePosition(idx[j]);
-      if (p > 0 && std::abs(new_point[j] - points.back()[j]) > 0.001)
+      if (p > 0 && std::abs(new_point[j] - points.back()[j]) > min_angle_change_)
         diverse_point = true;
     }
 
@@ -974,8 +975,11 @@ bool TimeOptimalTrajectoryGeneration::computeTimeStamps(robot_trajectory::RobotT
   // Return trajectory with only the first waypoint if there are not multiple diverse points
   if (points.size() == 1)
   {
-    ROS_WARN_NAMED(LOGNAME, "Trajectory is not being parameterized since it only contains a single distinct waypoint.");
-    robot_state::RobotState waypoint = robot_state::RobotState(trajectory.getWayPoint(0));
+    ROS_DEBUG_NAMED(LOGNAME,
+                    "Trajectory is parameterized with 0.0 dynamics since it only contains a single distinct waypoint.");
+    moveit::core::RobotState waypoint = moveit::core::RobotState(trajectory.getWayPoint(0));
+    waypoint.zeroVelocities();
+    waypoint.zeroAccelerations();
     trajectory.clear();
     trajectory.addSuffixWayPoint(waypoint, 0.0);
     return true;

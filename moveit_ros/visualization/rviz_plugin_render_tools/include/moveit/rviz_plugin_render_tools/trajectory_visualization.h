@@ -65,7 +65,7 @@ class RosTopicProperty;
 class EditableEnumProperty;
 class ColorProperty;
 class MovableText;
-}
+}  // namespace rviz
 
 namespace moveit_rviz_plugin
 {
@@ -129,6 +129,7 @@ protected:
 
   // Handles actually drawing the robot along motion plans
   RobotStateVisualizationPtr display_path_robot_;
+  std_msgs::ColorRGBA default_attached_object_color_;
 
   // Handle colouring of robot
   void setRobotColor(rviz::Robot* robot, const QColor& color);
@@ -136,7 +137,7 @@ protected:
 
   robot_trajectory::RobotTrajectoryPtr displaying_trajectory_message_;
   robot_trajectory::RobotTrajectoryPtr trajectory_message_to_display_;
-  std::vector<rviz::Robot*> trajectory_trail_;
+  std::vector<RobotStateVisualizationUniquePtr> trajectory_trail_;
   ros::Subscriber trajectory_topic_sub_;
   bool animating_path_;
   bool drop_displaying_trajectory_;

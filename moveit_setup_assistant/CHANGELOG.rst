@@ -2,6 +2,41 @@
 Changelog for package moveit_setup_assistant
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.6 (2020-08-19)
+------------------
+* [maint] Adapt repository for splitted moveit_resources layout (`#2199 <https://github.com/ros-planning/moveit/issues/2199>`_)
+* [maint] Migrate to clang-format-10, fix warnings
+* [fix]   Define planning adapters for chomp planning pipeline (`#2242 <https://github.com/ros-planning/moveit/issues/2242>`_)
+* [maint] Remove urdf package as build_depend from package.xml (`#2207 <https://github.com/ros-planning/moveit/issues/2207>`_)
+* Contributors: Jafar Abdi, Robert Haschke, tnaka, Michael Görner
+
+1.0.5 (2020-07-08)
+------------------
+* [fix]     Fix catkin_lint issues (`#2120 <https://github.com/ros-planning/moveit/issues/2120>`_)
+* [feature] Add use_rviz to demo.launch in setup_assistant (`#2019 <https://github.com/ros-planning/moveit/issues/2019>`_)
+* Contributors: Henning Kayser, Jafar Abdi, Michael Görner, Robert Haschke, Tyler Weaver
+
+1.0.4 (2020-05-30)
+------------------
+
+1.0.3 (2020-04-26)
+------------------
+* [feature] Allow loading of additional kinematics parameters file (`#1997 <https://github.com/ros-planning/moveit/issues/1997>`_)
+* [feature] Allow adding initial poses to fake_controllers.yaml (`#1892 <https://github.com/ros-planning/moveit/issues/1892>`_)
+* [feature] Display robot poses on selection, not only on click (`#1930 <https://github.com/ros-planning/moveit/issues/1930>`_)
+* [fix]     Fix invalid iterator (`#1623 <https://github.com/ros-planning/moveit/issues/1623>`_)
+* [maint]   Apply clang-tidy fix to entire code base (`#1394 <https://github.com/ros-planning/moveit/issues/1394>`_)
+* [maint]   Fix errors: catkin_lint 1.6.7 (`#1987 <https://github.com/ros-planning/moveit/issues/1987>`_)
+* [maint]   Windows build fixes
+  * Fix header inclusion and other MSVC build errors (`#1636 <https://github.com/ros-planning/moveit/issues/1636>`_)
+  * Fix binary artifact install locations. (`#1575 <https://github.com/ros-planning/moveit/issues/1575>`_)
+  * Favor ros::Duration.sleep over sleep. (`#1634 <https://github.com/ros-planning/moveit/issues/1634>`_)
+  * Fix binary artifact install locations. (`#1575 <https://github.com/ros-planning/moveit/issues/1575>`_)
+* [maint]   Use CMAKE_CXX_STANDARD to enforce c++14 (`#1607 <https://github.com/ros-planning/moveit/issues/1607>`_)
+* [feature] Add support for pos_vel_controllers and pos_vel_acc_controllers (`#1806 <https://github.com/ros-planning/moveit/issues/1806>`_)
+* [feature] Add joint state controller config by default (`#1024 <https://github.com/ros-planning/moveit/issues/1024>`_)
+* Contributors: AndyZe, Daniel Wang, Felix von Drigalski, Jafar Abdi, Max Krichenbauer, Michael Görner, Mohmmad Ayman, Robert Haschke, Sandro Magalhães, Sean Yen, Simon Schmeisser, Tejas Kumar Shastha, Yu, Yan, v4hn
+
 1.0.2 (2019-06-28)
 ------------------
 * [fix]     static transform publisher does not take a rate (`#1494 <https://github.com/ros-planning/moveit/issues/1494>`_)
@@ -62,7 +97,7 @@ Changelog for package moveit_setup_assistant
 * [enhancement][GUI] Planning Groups screen (`#1017 <https://github.com/ros-planning/moveit/issues/1017>`_)
 * [enhancement] use panda for test, and write test file in tmp dir (`#1042 <https://github.com/ros-planning/moveit/issues/1042>`_)
 * [enhancement] Added capabilties as arg to move_group.launch (`#998 <https://github.com/ros-planning/moveit/issues/998>`_)
-* [enhancement] Add moveit_setup_assistant as depenency of all *_moveit_config pkgs (`#1029 <https://github.com/ros-planning/moveit/issues/1029>`_)
+* [enhancement] Add moveit_setup_assistant as depenency of all `*_moveit_config` pkgs (`#1029 <https://github.com/ros-planning/moveit/issues/1029>`_)
 * [maintenance] various compiler warnings (`#1038 <https://github.com/ros-planning/moveit/issues/1038>`_)
 * [enhancement] Improving gazebo integration. (`#956 <https://github.com/ros-planning/moveit/issues/956>`_, `#936 <https://github.com/ros-planning/moveit/issues/936>`_)
 * [maintenance] Renamed wedgits in setup assistant wedgit to follow convention (`#995 <https://github.com/ros-planning/moveit/issues/995>`_)
@@ -111,7 +146,7 @@ Changelog for package moveit_setup_assistant
 
 0.9.5 (2017-03-08)
 ------------------
-* [fix][moveit_ros_warehouse] gcc6 build error `#423 <https://github.com/ros-planning/moveit/pull/423>`_ 
+* [fix][moveit_ros_warehouse] gcc6 build error `#423 <https://github.com/ros-planning/moveit/pull/423>`_
 * Contributors: Dave Coleman
 
 0.9.4 (2017-02-06)
@@ -137,7 +172,7 @@ Changelog for package moveit_setup_assistant
 
 0.7.1 (2016-06-24)
 ------------------
-* [sys] Qt adjustment. 
+* [sys] Qt adjustment.
   * relax Qt-version requirement.  Minor Qt version updates are ABI-compatible with each other:  https://wiki.qt.io/Qt-Version-Compatibility
   * auto-select Qt version matching the one from rviz `#114 <https://github.com/ros-planning/moveit_setup_assistant/issues/114>`_
   * Allow to conditionally compile against Qt5 by setting -DUseQt5=On

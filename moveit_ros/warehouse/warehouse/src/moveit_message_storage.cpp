@@ -46,8 +46,7 @@ moveit_warehouse::MoveItMessageStorage::MoveItMessageStorage(warehouse_ros::Data
 {
 }
 
-void moveit_warehouse::MoveItMessageStorage::filterNames(const std::string& regex,
-                                                         std::vector<std::string>& names) const
+void moveit_warehouse::MoveItMessageStorage::filterNames(const std::string& regex, std::vector<std::string>& names) const
 {
   if (!regex.empty())
   {
@@ -63,14 +62,14 @@ void moveit_warehouse::MoveItMessageStorage::filterNames(const std::string& rege
   }
 }
 
-static std::unique_ptr<warehouse_ros::DatabaseLoader> dbloader;
+static std::unique_ptr<warehouse_ros::DatabaseLoader> DBLOADER;
 
 typename warehouse_ros::DatabaseConnection::Ptr moveit_warehouse::loadDatabase()
 {
-  if (!dbloader)
+  if (!DBLOADER)
   {
-    dbloader.reset(new warehouse_ros::DatabaseLoader());
+    DBLOADER.reset(new warehouse_ros::DatabaseLoader());
   }
-  return dbloader->loadDatabase();
+  return DBLOADER->loadDatabase();
   // return typename warehouse_ros::DatabaseConnection::Ptr(new warehouse_ros_mongo::MongoDatabaseConnection());
 }

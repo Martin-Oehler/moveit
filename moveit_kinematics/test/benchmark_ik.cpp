@@ -34,7 +34,6 @@
 
 /* Author: Mark Moll */
 
-#include <cstring>
 #include <chrono>
 #include <ros/ros.h>
 #include <boost/program_options.hpp>
@@ -148,9 +147,16 @@ int main(int argc, char* argv[])
                        ik_time.count() / (double)i, i, 100. * num_failed_calls / i,
                        100. * num_self_collisions / (num_self_collisions + i));
     }
-    ROS_INFO_NAMED("cached_ik.measure_ik_call_cost", "Summary for group %s: %g %g %g", group->getName().c_str(),
-                   ik_time.count() / (double)i, 100. * num_failed_calls / i,
-                   100. * num_self_collisions / (num_self_collisions + i));
+    if (i != 0)
+    {
+      ROS_INFO_NAMED("cached_ik.measure_ik_call_cost", "Summary for group %s: %g %g %g", group->getName().c_str(),
+                     ik_time.count() / (double)i, 100. * num_failed_calls / i,
+                     100. * num_self_collisions / (num_self_collisions + i));
+    }
+    else
+    {
+      ROS_WARN_NAMED("cached_ik.measure_ik_call_cost", "Failure: No valid start positions found.");
+    }
   }
 
   ros::shutdown();

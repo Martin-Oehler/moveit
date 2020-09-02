@@ -46,7 +46,6 @@
 #include <moveit/kinematics_base/kinematics_base.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit/macros/class_forward.h>
-#include <moveit/macros/deprecation.h>
 #include <moveit_msgs/PlanningScene.h>
 #include <moveit_msgs/RobotTrajectory.h>
 #include <moveit_msgs/Constraints.h>
@@ -314,12 +313,10 @@ public:
   }
 
   /** \brief Get a specific collision detector for the world.  If not found return active CollisionWorld. */
-  const collision_detection::CollisionWorldConstPtr&
-  getCollisionWorld(const std::string& collision_detector_name) const;
+  const collision_detection::CollisionWorldConstPtr& getCollisionWorld(const std::string& collision_detector_name) const;
 
   /** \brief Get a specific collision detector for the padded robot.  If no found return active CollisionRobot. */
-  const collision_detection::CollisionRobotConstPtr&
-  getCollisionRobot(const std::string& collision_detector_name) const;
+  const collision_detection::CollisionRobotConstPtr& getCollisionRobot(const std::string& collision_detector_name) const;
 
   /** \brief Get a specific collision detector for the unpadded robot.  If no found return active unpadded
    * CollisionRobot. */
@@ -378,13 +375,11 @@ public:
   /** \brief Check if a given state is in collision (with the environment or self collision)
       If a group name is specified, collision checking is done for that group only. It is expected that the link
       transforms of \e state are up to date. */
-  bool isStateColliding(const robot_state::RobotState& state, const std::string& group = "",
-                        bool verbose = false) const;
+  bool isStateColliding(const robot_state::RobotState& state, const std::string& group = "", bool verbose = false) const;
 
   /** \brief Check if a given state is in collision (with the environment or self collision)
       If a group name is specified, collision checking is done for that group only. */
-  bool isStateColliding(const moveit_msgs::RobotState& state, const std::string& group = "",
-                        bool verbose = false) const;
+  bool isStateColliding(const moveit_msgs::RobotState& state, const std::string& group = "", bool verbose = false) const;
 
   /** \brief Check whether the current state is in collision, and if needed, updates the collision transforms of the
    * current state before the computation. */
@@ -1033,7 +1028,7 @@ private:
   robot_state::AttachedBodyCallback current_state_attached_body_callback_;
 
   // This variable is not necessarily used by child planning scenes
-  // This Transforms class is actually a SceneTransform class
+  // This Transforms class is actually a SceneTransforms class
   robot_state::TransformsPtr scene_transforms_;  // if NULL use parent's
 
   collision_detection::WorldPtr world_;             // never NULL, never shared with parent/child
@@ -1055,6 +1050,6 @@ private:
   // a map of object types
   std::unique_ptr<ObjectTypeMap> object_types_;
 };
-}
+}  // namespace planning_scene
 
 #endif

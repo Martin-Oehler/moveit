@@ -2,6 +2,36 @@
 Changelog for package moveit_kinematics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.6 (2020-08-19)
+------------------
+* [maint] Adapt repository for splitted moveit_resources layout (`#2199 <https://github.com/ros-planning/moveit/issues/2199>`_)
+* [maint] Migrate to clang-format-10
+* [maint] Optimize includes (`#2229 <https://github.com/ros-planning/moveit/issues/2229>`_)
+* Contributors: Markus Vieth, Robert Haschke, Michael Görner
+
+1.0.5 (2020-07-08)
+------------------
+
+1.0.4 (2020-05-30)
+------------------
+* Fix broken IKFast generator (`#2116 <https://github.com/ros-planning/moveit/issues/2116>`_)
+* Contributors: Robert Haschke
+
+1.0.3 (2020-04-26)
+------------------
+* [feature] KDL IK: constrain wiggled joints to limits (`#1953 <https://github.com/ros-planning/moveit/issues/1953>`_)
+* [feature] IKFast: optional prefix for link names (`#1599 <https://github.com/ros-planning/moveit/issues/1599>`_)
+  If you pass a `link_prefix` parameter in your `kinematics.yaml`, this string is prepended to the base and tip links.
+  It allows multi-robot setups (e.g. dual-arm) and still instantiate the same solver for both manipulators.
+* [feature] IKFast: increase verbosity of generated script (`#1434 <https://github.com/ros-planning/moveit/issues/1434>`_)
+* [maint]   Apply clang-tidy fix to entire code base (`#1394 <https://github.com/ros-planning/moveit/issues/1394>`_)
+* [maint]   Fix errors: catkin_lint 1.6.7 (`#1987 <https://github.com/ros-planning/moveit/issues/1987>`_)
+* [maint]   Windows build: Fix binary artifact install locations. (`#1575 <https://github.com/ros-planning/moveit/issues/1575>`_)
+* [maint]   Use CMAKE_CXX_STANDARD to enforce c++14 (`#1607 <https://github.com/ros-planning/moveit/issues/1607>`_)
+* [feature] IKFast: implement `Translation*AxisAngle4D` IK type (`#1823 <https://github.com/ros-planning/moveit/issues/1823>`_)
+* [fix]     Fix possible division-by-zero (`#1809 <https://github.com/ros-planning/moveit/issues/1809>`_)
+* Contributors: Christian Henkel, Martin Günther, Max Krichenbauer, Michael Görner, Robert Haschke, Sean Yen, Yu, Yan, jschleicher
+
 1.0.2 (2019-06-28)
 ------------------
 * [fix] KDL IK solver: fix handling of mimic joints (`#1490 <https://github.com/ros-planning/moveit/issues/1490>`_)
@@ -104,7 +134,7 @@ Changelog for package moveit_kinematics
 
 0.9.5 (2017-03-08)
 ------------------
-* [fix][moveit_ros_warehouse] gcc6 build error `#423 <https://github.com/ros-planning/moveit/pull/423>`_ 
+* [fix][moveit_ros_warehouse] gcc6 build error `#423 <https://github.com/ros-planning/moveit/pull/423>`_
 * Contributors: Dave Coleman
 
 0.9.4 (2017-02-06)

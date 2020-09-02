@@ -2,6 +2,21 @@
 Changelog for package moveit_controller_manager_example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.6 (2020-08-19)
+------------------
+
+1.0.5 (2020-07-08)
+------------------
+
+1.0.4 (2020-05-30)
+------------------
+
+1.0.3 (2020-04-26)
+------------------
+* [maint] Fix errors: catkin_lint 1.6.7 (`#1987 <https://github.com/ros-planning/moveit/issues/1987>`_)
+* [maint] Use CMAKE_CXX_STANDARD to enforce c++14 (`#1607 <https://github.com/ros-planning/moveit/issues/1607>`_)
+* Contributors: Robert Haschke, Sean Yen
+
 1.0.2 (2019-06-28)
 ------------------
 

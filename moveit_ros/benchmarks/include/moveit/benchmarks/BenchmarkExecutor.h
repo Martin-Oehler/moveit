@@ -1,36 +1,36 @@
 /*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2015, Rice University
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Rice University nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
+ * Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2015, Rice University
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of the Rice University nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *********************************************************************/
 
 /* Author: Ryan Luna */
 
@@ -54,7 +54,6 @@
 #include <vector>
 #include <string>
 #include <boost/function.hpp>
-#include <memory>
 
 namespace moveit_ros_benchmarks
 {
@@ -91,8 +90,7 @@ public:
 
   /// Definition of a post-run benchmark event function.  Invoked immediately after each planner calls solve().
   typedef boost::function<void(const moveit_msgs::MotionPlanRequest& request,
-                               const planning_interface::MotionPlanDetailedResponse& response,
-                               PlannerRunData& run_data)>
+                               const planning_interface::MotionPlanDetailedResponse& response, PlannerRunData& run_data)>
       PostRunEventFunction;
 
   BenchmarkExecutor(const std::string& robot_description_param = "robot_description");
@@ -141,8 +139,29 @@ protected:
   virtual bool initializeBenchmarks(const BenchmarkOptions& opts, moveit_msgs::PlanningScene& scene_msg,
                                     std::vector<BenchmarkRequest>& queries);
 
+  /// Initialize benchmark query data from start states and constraints
+  virtual bool loadBenchmarkQueryData(const BenchmarkOptions& opts, moveit_msgs::PlanningScene& scene_msg,
+                                      std::vector<StartState>& start_states,
+                                      std::vector<PathConstraints>& path_constraints,
+                                      std::vector<PathConstraints>& goal_constraints,
+                                      std::vector<TrajectoryConstraints>& traj_constraints,
+                                      std::vector<BenchmarkRequest>& queries);
+
   virtual void collectMetrics(PlannerRunData& metrics, const planning_interface::MotionPlanDetailedResponse& mp_res,
                               bool solved, double total_time);
+
+  /// Compute the similarity of each (final) trajectory to all other (final) trajectories in the experiment and write
+  /// the results to planner_data metrics
+  void computeAveragePathSimilarities(PlannerBenchmarkData& planner_data,
+                                      const std::vector<planning_interface::MotionPlanDetailedResponse>& responses,
+                                      const std::vector<bool>& solved);
+
+  /// Helper function used by computeAveragePathSimilarities() for computing a heuristic distance metric between two
+  /// robot trajectories. This function aligns both trajectories in a greedy fashion and computes the mean waypoint
+  /// distance averaged over all aligned waypoints. Using a greedy approach is more efficient than dynamic time warping,
+  /// and seems to be sufficient for similar trajectories.
+  bool computeTrajectoryDistance(const robot_trajectory::RobotTrajectory& traj_first,
+                                 const robot_trajectory::RobotTrajectory& traj_second, double& result_distance);
 
   virtual void writeOutput(const BenchmarkRequest& brequest, const std::string& start_time, double benchmark_duration);
 
@@ -204,6 +223,6 @@ protected:
   std::vector<QueryStartEventFunction> query_start_fns_;
   std::vector<QueryCompletionEventFunction> query_end_fns_;
 };
-}
+}  // namespace moveit_ros_benchmarks
 
 #endif

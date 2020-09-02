@@ -61,7 +61,7 @@ class FloatProperty;
 class RosTopicProperty;
 class ColorProperty;
 class EnumProperty;
-}
+}  // namespace rviz
 
 namespace moveit_rviz_plugin
 {
@@ -150,6 +150,8 @@ protected:
 
   /// This is an event called by loadRobotModel() in the MainLoop; do not call directly
   virtual void onRobotModelLoaded();
+  /// This is called upon successful retrieval of the (initial) planning scene state
+  virtual void onNewPlanningSceneState();
 
   /**
    * \brief Set the scene node's position, given the target frame and the planning frame
@@ -190,7 +192,10 @@ protected:
   RobotStateVisualizationPtr planning_scene_robot_;
   PlanningSceneRenderPtr planning_scene_render_;
 
+  // full update required
   bool planning_scene_needs_render_;
+  // or only the robot position (excluding attached object changes)
+  bool robot_state_needs_render_;
   float current_scene_time_;
 
   rviz::Property* scene_category_;

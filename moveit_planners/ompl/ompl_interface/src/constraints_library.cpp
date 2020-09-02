@@ -50,7 +50,7 @@ namespace
 template <typename T>
 void msgToHex(const T& msg, std::string& hex)
 {
-  static const char symbol[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+  static const char SYMBOL[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
   const size_t serial_size_arg = ros::serialization::serializationLength(msg);
 
   boost::shared_array<uint8_t> buffer_arg(new uint8_t[serial_size_arg]);
@@ -59,8 +59,8 @@ void msgToHex(const T& msg, std::string& hex)
   hex.resize(serial_size_arg * 2);
   for (std::size_t i = 0; i < serial_size_arg; ++i)
   {
-    hex[i * 2] = symbol[buffer_arg[i] / 16];
-    hex[i * 2 + 1] = symbol[buffer_arg[i] % 16];
+    hex[i * 2] = SYMBOL[buffer_arg[i] / 16];
+    hex[i * 2 + 1] = SYMBOL[buffer_arg[i] % 16];
   }
 }
 
@@ -314,14 +314,14 @@ void ompl_interface::ConstraintsLibrary::loadConstraintApproximations(const std:
                                                                  msg, filename, ompl::base::StateStoragePtr(cass),
                                                                  milestones));
       if (constraint_approximations_.find(cap->getName()) != constraint_approximations_.end())
-        ROS_WARN_NAMED("constraints_library", "Overwriting constraint approximation named '%s'",
-                       cap->getName().c_str());
+        ROS_WARN_NAMED("constraints_library", "Overwriting constraint approximation named '%s'", cap->getName().c_str());
       constraint_approximations_[cap->getName()] = cap;
       std::size_t sum = 0;
       for (std::size_t i = 0; i < cass->size(); ++i)
         sum += cass->getMetadata(i).first.size();
-      ROS_INFO_NAMED("constraints_library", "Loaded %lu states (%lu milestones) and %lu connections (%0.1lf per state) "
-                                            "for constraint named '%s'%s",
+      ROS_INFO_NAMED("constraints_library",
+                     "Loaded %lu states (%lu milestones) and %lu connections (%0.1lf per state) "
+                     "for constraint named '%s'%s",
                      cass->size(), cap->getMilestoneCount(), sum, (double)sum / (double)cap->getMilestoneCount(),
                      msg.name.c_str(), explicit_motions ? ". Explicit motions included." : "");
     }
@@ -392,18 +392,20 @@ ompl_interface::ConstraintsLibrary::getConstraintApproximation(const moveit_msgs
 }
 
 ompl_interface::ConstraintApproximationConstructionResults
-ompl_interface::ConstraintsLibrary::addConstraintApproximation(
-    const moveit_msgs::Constraints& constr, const std::string& group,
-    const planning_scene::PlanningSceneConstPtr& scene, const ConstraintApproximationConstructionOptions& options)
+ompl_interface::ConstraintsLibrary::addConstraintApproximation(const moveit_msgs::Constraints& constr,
+                                                               const std::string& group,
+                                                               const planning_scene::PlanningSceneConstPtr& scene,
+                                                               const ConstraintApproximationConstructionOptions& options)
 {
   return addConstraintApproximation(constr, constr, group, scene, options);
 }
 
 ompl_interface::ConstraintApproximationConstructionResults
-ompl_interface::ConstraintsLibrary::addConstraintApproximation(
-    const moveit_msgs::Constraints& constr_sampling, const moveit_msgs::Constraints& constr_hard,
-    const std::string& group, const planning_scene::PlanningSceneConstPtr& scene,
-    const ConstraintApproximationConstructionOptions& options)
+ompl_interface::ConstraintsLibrary::addConstraintApproximation(const moveit_msgs::Constraints& constr_sampling,
+                                                               const moveit_msgs::Constraints& constr_hard,
+                                                               const std::string& group,
+                                                               const planning_scene::PlanningSceneConstPtr& scene,
+                                                               const ConstraintApproximationConstructionOptions& options)
 {
   ConstraintApproximationConstructionResults res;
   ModelBasedPlanningContextPtr pc = context_manager_.getPlanningContext(group, options.state_space_parameterization);

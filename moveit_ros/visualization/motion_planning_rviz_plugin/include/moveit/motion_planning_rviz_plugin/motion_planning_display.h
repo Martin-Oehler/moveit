@@ -77,7 +77,7 @@ class RosTopicProperty;
 class EditableEnumProperty;
 class ColorProperty;
 class MovableText;
-}
+}  // namespace rviz
 
 namespace moveit_rviz_plugin
 {
@@ -108,6 +108,11 @@ public:
     return query_goal_state_->getState();
   }
 
+  const robot_state::RobotState& getPreviousState() const
+  {
+    return *previous_state_;
+  }
+
   const robot_interaction::RobotInteractionPtr& getRobotInteraction() const
   {
     return robot_interaction_;
@@ -131,8 +136,10 @@ public:
   void setQueryStartState(const robot_state::RobotState& start);
   void setQueryGoalState(const robot_state::RobotState& goal);
 
+  void updateQueryStates(const moveit::core::RobotState& current_state);
   void updateQueryStartState();
   void updateQueryGoalState();
+  void rememberPreviousStartState();
 
   void useApproximateIK(bool flag);
 
@@ -151,6 +158,11 @@ public:
   void resetStatusTextColor();
 
   void toggleSelectPlanningGroupSubscription(bool enable);
+
+Q_SIGNALS:
+  // signals issued when start/goal states of a query changed
+  void queryStartStateChanged();
+  void queryGoalStateChanged();
 
 private Q_SLOTS:
 
@@ -187,6 +199,7 @@ protected:
   };
 
   void onRobotModelLoaded() override;
+  void onNewPlanningSceneState() override;
   void onSceneMonitorReceivedUpdate(planning_scene_monitor::PlanningSceneMonitor::SceneUpdateType update_type) override;
   void updateInternal(float wall_dt, float ros_dt) override;
 
@@ -254,6 +267,8 @@ protected:
   std::shared_ptr<interactive_markers::MenuHandler> menu_handler_goal_;
   std::map<std::string, LinkDisplayStatus> status_links_start_;
   std::map<std::string, LinkDisplayStatus> status_links_goal_;
+  /// remember previous start state (updated before starting execution)
+  robot_state::RobotStatePtr previous_state_;
 
   /// Hold the names of the groups for which the query states have been updated (and should not be altered when new info
   /// is received from the planning scene)

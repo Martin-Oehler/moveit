@@ -40,7 +40,6 @@
 #include <moveit/distance_field/voxel_grid.h>
 #include <moveit/distance_field/distance_field.h>
 #include <vector>
-#include <list>
 #include <Eigen/Core>
 #include <set>
 #include <octomap/octomap.h>
@@ -540,16 +539,6 @@ private:
    */
   void print(const EigenSTL::vector_Vector3d& points);
 
-  /**
-   * \brief Computes squared distance between two 3D integer points
-   *
-   * @param point1 Point 1 for distance
-   * @param point2 Point 2 for distance
-   *
-   * @return Distance between points squared
-   */
-  static int eucDistSq(Eigen::Vector3i point1, Eigen::Vector3i point2);
-
   bool propagate_negative_; /**< \brief Whether or not to propagate negative distances */
 
   VoxelGrid<PropDistanceFieldVoxel>::Ptr voxel_grid_; /**< \brief Actual container for distance data */
@@ -610,6 +599,6 @@ inline double PropagationDistanceField::getDistance(const PropDistanceFieldVoxel
 {
   return sqrt_table_[object.distance_square_] - sqrt_table_[object.negative_distance_square_];
 }
-}
+}  // namespace distance_field
 
 #endif

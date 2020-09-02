@@ -1,36 +1,36 @@
 /*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2018, CITEC Bielefeld
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Willow Garage nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
+ * Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2018, CITEC Bielefeld
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of the Willow Garage nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *********************************************************************/
 
 /* Author: Robert Haschke */
 #include <moveit/robot_model/robot_model.h>
@@ -108,21 +108,21 @@ TEST_F(Timing, stateUpdate)
 
 TEST_F(Timing, multiply)
 {
-  size_t RUNS = 1e7;
+  size_t runs = 1e7;
   double gold_standard = 0;
   {
     ScopedTimer t("Eigen::Affine * Eigen::Matrix: ", &gold_standard);
-    for (size_t i = 0; i < RUNS; ++i)
+    for (size_t i = 0; i < runs; ++i)
       transforms_[result_idx_].affine().noalias() = transforms_[input_idx_].affine() * transforms_[input_idx_].matrix();
   }
   {
     ScopedTimer t("Eigen::Matrix * Eigen::Matrix: ", &gold_standard);
-    for (size_t i = 0; i < RUNS; ++i)
+    for (size_t i = 0; i < runs; ++i)
       transforms_[result_idx_].matrix().noalias() = transforms_[input_idx_].matrix() * transforms_[input_idx_].matrix();
   }
   {
     ScopedTimer t("Eigen::Isometry * Eigen::Isometry: ", &gold_standard);
-    for (size_t i = 0; i < RUNS; ++i)
+    for (size_t i = 0; i < runs; ++i)
       transforms_[result_idx_] = transforms_[input_idx_] * transforms_[input_idx_];
   }
 }
@@ -131,27 +131,27 @@ TEST_F(Timing, inverse)
 {
   EigenSTL::vector_Affine3d affine(1);
   affine[0].matrix() = transforms_[input_idx_].matrix();
-  size_t RUNS = 1e7;
+  size_t runs = 1e7;
   double gold_standard = 0;
   {
     ScopedTimer t("Isometry3d::inverse(): ", &gold_standard);
-    for (size_t i = 0; i < RUNS; ++i)
+    for (size_t i = 0; i < runs; ++i)
       transforms_[result_idx_] = transforms_[input_idx_].inverse();
   }
   volatile size_t input_idx = 0;
   {
     ScopedTimer t("Affine3d::inverse(Eigen::Isometry): ", &gold_standard);
-    for (size_t i = 0; i < RUNS; ++i)
+    for (size_t i = 0; i < runs; ++i)
       transforms_[result_idx_].affine().noalias() = affine[input_idx].inverse(Eigen::Isometry).affine();
   }
   {
     ScopedTimer t("Affine3d::inverse(): ", &gold_standard);
-    for (size_t i = 0; i < RUNS; ++i)
+    for (size_t i = 0; i < runs; ++i)
       transforms_[result_idx_].affine().noalias() = affine[input_idx].inverse().affine();
   }
   {
     ScopedTimer t("Matrix4d::inverse(): ", &gold_standard);
-    for (size_t i = 0; i < RUNS; ++i)
+    for (size_t i = 0; i < runs; ++i)
       transforms_[result_idx_].matrix().noalias() = affine[input_idx].matrix().inverse();
   }
 }
