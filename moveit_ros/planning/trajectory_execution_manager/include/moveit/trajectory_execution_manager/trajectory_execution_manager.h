@@ -111,6 +111,7 @@ public:
       \note If manage_controllers_ is false and the controllers that happen to be active do not cover the joints to be
      actuated, this function fails. */
   bool ensureActiveControllersForJoints(const std::vector<std::string>& joints);
+  bool ensureActiveControllersForJointsImpl(const std::vector<std::string>& joints);
 
   /** \brief Make sure a particular controller is active.
       \note If manage_controllers_ is false and the controllers that happen to be active to not include the one
@@ -121,6 +122,8 @@ public:
       \note If manage_controllers_ is false and the controllers that happen to be active to not include the ones
      specified as argument, this function fails. */
   bool ensureActiveControllers(const std::vector<std::string>& controllers);
+
+  bool ensureActiveControllersImpl(const std::vector<std::string>& controllers);
 
   /** \brief Check if a controller is active */
   bool isControllerActive(const std::string& controller);

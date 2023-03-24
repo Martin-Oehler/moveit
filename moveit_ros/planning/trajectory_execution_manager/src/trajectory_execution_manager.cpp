@@ -1635,6 +1635,15 @@ bool TrajectoryExecutionManager::ensureActiveControllersForGroup(const std::stri
 
 bool TrajectoryExecutionManager::ensureActiveControllersForJoints(const std::vector<std::string>& joints)
 {
+  if (!ensureActiveControllersForJointsImpl(joints)) {
+    reloadControllerInformation();
+    return ensureActiveControllersForJointsImpl(joints);
+  }
+  return true;
+}
+
+bool TrajectoryExecutionManager::ensureActiveControllersForJointsImpl(const std::vector<std::string>& joints)
+{
   std::vector<std::string> all_controller_names;
   for (std::map<std::string, ControllerInformation>::const_iterator it = known_controllers_.begin();
        it != known_controllers_.end(); ++it)
@@ -1664,6 +1673,16 @@ bool TrajectoryExecutionManager::ensureActiveController(const std::string& contr
 }
 
 bool TrajectoryExecutionManager::ensureActiveControllers(const std::vector<std::string>& controllers)
+{
+  if (!ensureActiveControllersImpl(controllers)) {
+    reloadControllerInformation();
+    return ensureActiveControllersImpl(controllers);
+  }
+  return true;
+}
+
+
+bool TrajectoryExecutionManager::ensureActiveControllersImpl(const std::vector<std::string>& controllers)
 {
   updateControllersState(DEFAULT_CONTROLLER_INFORMATION_VALIDITY_AGE);
 
